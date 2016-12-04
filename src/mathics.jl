@@ -3,37 +3,42 @@ using PyCall
 import Symata.SymataIO: symata_to_mma_fullform_string
 
 const mathics = PyCall.PyNULL()
-const mathicscore = PyCall.PyNULL()
-const mathicsparser = PyCall.PyNULL()
+#const mathicscore = PyCall.PyNULL()
+#const mathicsparser = PyCall.PyNULL()
 const mathicsTerminalShell = PyCall.PyNULL()
 const mathicsevaluation = PyCall.PyNULL()
-const mathicsResult = PyCall.PyNULL()
+#const mathicsResult = PyCall.PyNULL()
 const mathicsshell = PyCall.PyNULL()
 const mathicsdefinitions = PyCall.PyNULL()
+
+const symatapy = PyCall.PyNULL()
 
 function import_mathics()
     copy!(mathics, PyCall.pyimport_conda("mathics", "mathics"))
 end
 
 function init_mathics()
+    symatapydir = joinpath(dirname(@__FILE__), "..", "pysrc")
+    push!(pyimport("sys")["path"], symatapydir)
     import_mathics()
     pyimport("mathics.main")
     pyimport("mathics.core")
     pyimport("mathics.core.definitions")
     pyimport("mathics.core.evaluation")
     pyimport("mathics.core.parser")
-    copy!(mathicsTerminalShell, mathics[:main][:SymataTerminalShell])
+    symatapy = pyimport("symatapy")
+    copy!(mathicsTerminalShell, symatapy[:SymataTerminalShell])
     make_mathics_REPL()
     nothing
 end
 
 function make_mathics_REPL()
-    copy!(mathicscore, mathics[:core])
-    copy!(mathicsparser, mathics[:core][:parser])
+#    copy!(mathicscore, mathics[:core])
+#    copy!(mathicsparser, mathics[:core][:parser])
     copy!(mathicsdefinitions, mathics[:core][:definitions][:Definitions](add_builtin=true))
     copy!(mathicsshell, mathicsTerminalShell(mathicsdefinitions, "Linux", true, true))
     copy!(mathicsevaluation, mathics[:core][:evaluation][:Evaluation](mathicsdefinitions, output=mathics[:main][:TerminalOutput](mathicsshell)))
-    copy!(mathicsResult, mathics[:core][:evaluation][:Result])
+#    copy!(mathicsResult, mathics[:core][:evaluation][:Result])
 end
 
 mathicstype(ex::PyObject) = pytypeof(ex)[:__name__]
@@ -81,8 +86,6 @@ function prompt(opt::EvaluateMmaSyntax)
 end
 
 simple(opt::EvaluateMmaSyntax) = false
-
-#input_prompt() = "In[" * string(get_line_number()) * "] := "
 
 """
     mathics_REPL()
