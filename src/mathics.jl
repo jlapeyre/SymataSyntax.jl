@@ -3,11 +3,8 @@ using PyCall
 import Symata.SymataIO: symata_to_mma_fullform_string
 
 const mathics = PyCall.PyNULL()
-#const mathicscore = PyCall.PyNULL()
-#const mathicsparser = PyCall.PyNULL()
 const mathicsTerminalShell = PyCall.PyNULL()
 const mathicsevaluation = PyCall.PyNULL()
-#const mathicsResult = PyCall.PyNULL()
 const mathicsshell = PyCall.PyNULL()
 const mathicsdefinitions = PyCall.PyNULL()
 
@@ -28,17 +25,14 @@ function init_mathics()
     pyimport("mathics.core.parser")
     symatapy = pyimport("symatapy")
     copy!(mathicsTerminalShell, symatapy[:SymataTerminalShell])
-    make_mathics_REPL()
+    make_mmasyntax_REPL()
     nothing
 end
 
-function make_mathics_REPL()
-#    copy!(mathicscore, mathics[:core])
-#    copy!(mathicsparser, mathics[:core][:parser])
+function make_mmasyntax_REPL()
     copy!(mathicsdefinitions, mathics[:core][:definitions][:Definitions](add_builtin=true))
     copy!(mathicsshell, mathicsTerminalShell(mathicsdefinitions, "Linux", true, true))
     copy!(mathicsevaluation, mathics[:core][:evaluation][:Evaluation](mathicsdefinitions, output=mathics[:main][:TerminalOutput](mathicsshell)))
-#    copy!(mathicsResult, mathics[:core][:evaluation][:Result])
 end
 
 mathicstype(ex::PyObject) = pytypeof(ex)[:__name__]
@@ -88,12 +82,12 @@ end
 simple(opt::EvaluateMmaSyntax) = false
 
 """
-    mathics_REPL()
+    mmasyntax_REPL()
 
 enter the Symata REPL in which input and output follow Mathematica syntax.
 Enter `ctrl-d` to exit this mode.
 """
-function mathics_REPL()
+function mmasyntax_REPL()
     exitexpr = mxpr(:ExitMathics)
     evalopts = EvaluateMmaSyntax()
     while true
