@@ -192,6 +192,7 @@ class SymataTerminalShell(LineFeeder):
         return False
 
 
+    
 ### A shell for running an independent mathics process    
 
 def mathics_shell(shell):
@@ -216,18 +217,9 @@ def evaluate_query(evaluation,query):
     result = evaluation.evaluate(query, timeout=settings.TIMEOUT)
     return result
 
+
 ## hmmm, this returns the result as a string
 def read_and_evaluate(evaluation,input):
     query = evaluation.parse(input)
     result = evaluation.evaluate(query, timeout=settings.TIMEOUT)
     return result.result
-
-
-
-
-
-
-
-
-
-

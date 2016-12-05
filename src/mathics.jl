@@ -169,3 +169,27 @@ end
 
 # This formats the expressionw without evaluating it.
 # mathics_read_evaluate_single_line("MathMLForm[HoldForm[{1, 2, 3} ]]")
+
+
+# function read_file(fname)
+#     feeder
+# end
+
+    # if args.FILE is not None:
+    #     feeder = FileLineFeeder(args.FILE)
+    #     try:
+    #         while not feeder.empty():
+    #             evaluation = Evaluation(
+    #                 shell.definitions, output=TerminalOutput(shell), catch_interrupt=False)
+    #             query = evaluation.parse_feeder(feeder)
+    #             if query is None:
+    #                 continue
+    #             evaluation.evaluate(query, timeout=settings.TIMEOUT)
+    #     except (KeyboardInterrupt):
+    #         print('\nKeyboardInterrupt')
+
+    #     if args.persist:
+    #         definitions.set_line_no(0)
+    #     else:
+    #         return
+
