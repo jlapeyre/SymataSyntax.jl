@@ -2,6 +2,12 @@ using PyCall
 
 import Symata.SymataIO: symata_to_mma_fullform_string
 
+type MathicsREPL
+    terminal_shell
+    evaluation
+    definitions
+end
+
 const mathics = PyCall.PyNULL()
 const symataTerminalShell = PyCall.PyNULL()
 const mathicsTerminalShell = PyCall.PyNULL()

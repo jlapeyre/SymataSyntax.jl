@@ -2,11 +2,11 @@
 
 Mathematica syntax for Symata
 
-[![Build Status](https://travis-ci.org/jlapeyre/SymataSyntax.jl.svg?branch=master)](https://travis-ci.org/jlapeyre/SymataSyntax.jl)
+<!-- [![Build Status](https://travis-ci.org/jlapeyre/SymataSyntax.jl.svg?branch=master)](https://travis-ci.org/jlapeyre/SymataSyntax.jl) -->
 
-[![Coverage Status](https://coveralls.io/repos/jlapeyre/SymataSyntax.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/jlapeyre/SymataSyntax.jl?branch=master)
+<!-- [![Coverage Status](https://coveralls.io/repos/jlapeyre/SymataSyntax.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/jlapeyre/SymataSyntax.jl?branch=master) -->
 
-[![codecov.io](http://codecov.io/github/jlapeyre/SymataSyntax.jl/coverage.svg?branch=master)](http://codecov.io/github/jlapeyre/SymataSyntax.jl?branch=master)
+<!-- [![codecov.io](http://codecov.io/github/jlapeyre/SymataSyntax.jl/coverage.svg?branch=master)](http://codecov.io/github/jlapeyre/SymataSyntax.jl?branch=master) -->
 
 This package provides Mathematica syntax for [`Symata`](https://github.com/jlapeyre/Symata.jl). This package is unrelated to and independent of
 Mathematica and Wolfram language software from WRI. `SymataSyntax` uses the python package [mathics](http://www.mathics.org) for parsing and
