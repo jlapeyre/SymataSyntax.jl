@@ -44,6 +44,7 @@ end
 
 mathicstype(ex::PyObject) = pytypeof(ex)[:__name__]
 
+## For the moment we strip all context information from symbols.
 function mathics_to_symata_symbol(s::String)
     rg = r"\`([^\`]+)$"
     ma = match(rg, s)
