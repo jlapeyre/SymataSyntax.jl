@@ -48,7 +48,10 @@ In this case, `mathics` can by installed from a shell like this
 
 ## Using SymataSyntax
 
+### Mathematica-syntax mode
+
 Enter Mathematica-syntax mode with the Symata command `MmaSyntax()`. Return to the standard Symata-syntax mode by typing `ctrl-d`.
+The Symata command `MmaSyntax()` will try to load `SymataSyntax.jl`.
 
 ```
 symata 1> Table(i^2, [i, 1, 10])
@@ -62,6 +65,12 @@ In[3]:=     # type ctrl-d to exit MmaSyntax mode
 symata 3> ex
 Out(3) = [x,x^2,x^3,x^4,x^5]
 ```
+
+### Mathics mode
+
+Enter the mathics REPL with the command `Mathics()`. Return to Symata by typing `ctrl-d`.
+At present, the Symata and mathics processes cannot communicate.
+
 
 ## Symata, sympy, mpmath, and mathics
 
