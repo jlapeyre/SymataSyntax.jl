@@ -2,8 +2,12 @@ using PyCall
 
 import Symata.SymataIO: symata_to_mma_fullform_string
 
-const mathics = PyCall.PyNULL()
-const symatapy = PyCall.PyNULL()
+pynull() = PyCall.PyNULL()
+
+#### Setup REPLs
+
+const mathics = pynull()
+const symatapy = pynull()
 
 type MathicsREPL
     TerminalShell
@@ -12,18 +16,10 @@ type MathicsREPL
     definitions
 end
 
-pynull() = PyCall.PyNULL()
 MathicsREPL() = MathicsREPL(pynull(),pynull(),pynull(),pynull())
 
 const symata_mma_repl = MathicsREPL()
 const mathics_repl = MathicsREPL()
-
-const symatapydir = joinpath(dirname(@__FILE__), "..", "pysrc")
-
-
-
-
-
 
 function set_TerminalShell(toplevel, shell, repl::MathicsREPL)
     copy!(repl.TerminalShell, toplevel[shell])
@@ -50,10 +46,9 @@ function make_mathics_repl()
     populateMathicsREPL(mathics_repl)
 end
 
-function import_mathics()
-    copy!(mathics, PyCall.pyimport_conda("mathics", "mathics"))
-end
+import_mathics() = copy!(mathics, PyCall.pyimport_conda("mathics", "mathics"))
 
+const symatapydir = joinpath(dirname(@__FILE__), "..", "pysrc")
 function import_symatapy()
     push!(pyimport("sys")["path"], symatapydir)
     copy!(symatapy, pyimport("symatapy"))
@@ -72,21 +67,8 @@ function init_mathics()
     nothing
 end
 
-#     copy!(symatadefinitions, mathics[:core][:definitions][:Definitions](add_builtin=true))
-#     copy!(mathicsdefinitions, mathics[:core][:definitions][:Definitions](add_builtin=true))
-#     copy!(symatashell, symataTerminalShell(symatadefinitions, "Linux", true, true))
-#     copy!(mathicsshell, mathicsTerminalShell(mathicsdefinitions, "Linux", true, true))
-#     copy!(mathicsevaluation, mathics[:core][:evaluation][:Evaluation](mathicsdefinitions, output=mathics[:main][:TerminalOutput](mathicsshell)))
-#     copy!(symataevaluation, mathics[:core][:evaluation][:Evaluation](symatadefinitions, output=mathics[:main][:TerminalOutput](symatashell)))
-# end
 
-    # copy!(symataTerminalShell, symatapy[:SymataTerminalShell])
-    # copy!(mathicsTerminalShell, mathics[:main][:TerminalShell])
-# const mathicsevaluation = PyCall.PyNULL()
-# const symatashell = PyCall.PyNULL()
-# const mathicsshell = PyCall.PyNULL()
-# const symatadefinitions = PyCall.PyNULL()
-# const mathicsdefinitions = PyCall.PyNULL()
+#### Running REPLs and translating
 
 
 mathicstype(ex::PyObject) = pytypeof(ex)[:__name__]
@@ -104,12 +86,8 @@ function mathics_to_symata(ex::PyObject)
         s = ex[:head][:name]
         return mxpr(mathics_to_symata_symbol(s), map(mathics_to_symata, ex[:leaves]))
     end
-    if h == "Symbol"
-        return mathics_to_symata_symbol(ex[:name])
-    end
-    if haskey(ex, :value)
-        return ex[:value]
-    end
+    h == "Symbol" && return mathics_to_symata_symbol(ex[:name])
+    haskey(ex, :value) && return ex[:value]
     warn("Unable to translate $ex")
 end
 
