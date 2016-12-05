@@ -66,6 +66,14 @@ symata 3> ex
 Out(3) = [x,x^2,x^3,x^4,x^5]
 ```
 
+### Reading from a file
+
+Read and evaluate Mathematica syntax expressions from a file with `GetMma`.
+
+```julia
+symata 1> GetMma("fname")
+```
+
 ### Mathics mode
 
 Enter the mathics REPL with the command `Mathics()`. Return to Symata by typing `ctrl-d`.

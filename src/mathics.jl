@@ -4,6 +4,9 @@ import Symata.SymataIO: symata_to_mma_fullform_string
 
 pynull() = PyCall.PyNULL()
 
+const Evaluation = pynull()
+const TerminalOutput = pynull()
+
 #### Setup REPLs
 
 const mathics = pynull()
@@ -62,6 +65,10 @@ function init_mathics()
     pyimport("mathics.core.parser")
     import_mathics()
     import_symatapy()
+
+    copy!(TerminalOutput, mathics[:main][:TerminalOutput])
+    copy!(Evaluation, mathics[:core][:evaluation][:Evaluation])
+
     make_mmasyntax_repl()
     make_mathics_repl()
     nothing
@@ -167,29 +174,37 @@ end
 # julia> mathics_read_evaluate_single_line("MathMLForm[Table[i, {i,3}]]")
 # "<math><mrow><mo>{</mo> <mrow><mn>1</mn> <mo>,</mo> <mn>2</mn> <mo>,</mo> <mn>3</mn></mrow> <mo>}</mo></mrow></math>"
 
-# This formats the expressionw without evaluating it.
+# This formats the expression without evaluating it.
 # mathics_read_evaluate_single_line("MathMLForm[HoldForm[{1, 2, 3} ]]")
 
+#### Reading from a file
 
-# function read_file(fname)
-#     feeder
-# end
+type EvaluateMmaSyntaxFile <: AbstractEvaluateOptions
+end
 
-    # if args.FILE is not None:
-    #     feeder = FileLineFeeder(args.FILE)
-    #     try:
-    #         while not feeder.empty():
-    #             evaluation = Evaluation(
-    #                 shell.definitions, output=TerminalOutput(shell), catch_interrupt=False)
-    #             query = evaluation.parse_feeder(feeder)
-    #             if query is None:
-    #                 continue
-    #             evaluation.evaluate(query, timeout=settings.TIMEOUT)
-    #     except (KeyboardInterrupt):
-    #         print('\nKeyboardInterrupt')
+prompt(opt::EvaluateMmaSyntaxFile) = nothing
+simple(opt::EvaluateMmaSyntaxFile) = true
 
-    #     if args.persist:
-    #         definitions.set_line_no(0)
-    #     else:
-    #         return
+"""
+    read_file(fname)
 
+read a file of Mathematica-syntax expressions, Symata-evaluating each one after reading.
+Return the last expression.
+"""
+function read_file(fname)
+    repl = symata_mma_repl
+    evalopts = EvaluateMmaSyntaxFile()
+    fd = pybuiltin("file")(fname)
+    feeder = mathics[:core][:parser][:FileLineFeeder](fd)
+    local lastres = nothing
+    local res = nothing
+    while ! feeder[:empty]()
+        evaluation = mathics[:core][:evaluation][:Evaluation](repl.definitions, output=mathics[:main][:TerminalOutput](repl.shell),
+                                                              catch_interrupt=false)
+        query = evaluation[:parse_feeder](feeder)
+        ex = mathics_to_symata(query)
+        lastres = res
+        res = Symata.symataevaluate(ex, evalopts)
+    end
+    lastres
+end
