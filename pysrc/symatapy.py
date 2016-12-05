@@ -32,6 +32,7 @@ class SymataTerminalShell(LineFeeder):
         super(SymataTerminalShell, self).__init__('<stdin>')
         self.input_encoding = locale.getpreferredencoding()
         self.lineno = 0
+        self.inputno = 0
 
         # Try importing readline to enable arrow keys support etc.
         self.using_readline = False
@@ -170,15 +171,17 @@ class SymataTerminalShell(LineFeeder):
     def reset_lineno(self):
         self.lineno = 0
 
-    def set_lineno(self,n):
-        self.lineno = n
+    def set_inputno(self,n):
+        self.inputno = n
 
     def get_symata_in_prompt(self):
-        return '{1}In[{2}{0}{3}]:= {4}'.format(self.lineno, *self.incolors)
+        if self.lineno > 0:
+            return ' ' * len('In[{0}]:= '.format(self.inputno))
+        else:
+            return '{1}In[{2}{0}{3}]:= {4}'.format(self.inputno, *self.incolors)
 
     def feed(self):
         result = self.read_line(self.get_symata_in_prompt()) + '\n'
-#        result = self.read_line("") + '\n'
         if result == '\n':
             return ''   # end of input
         self.lineno += 1

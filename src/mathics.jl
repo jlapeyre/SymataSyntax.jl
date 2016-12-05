@@ -101,13 +101,14 @@ function mmasyntax_REPL()
     while true
         ex =
             try
-                #                print(input_prompt())  # we do this in python
-                symatashell[:set_lineno](get_line_number())
+                symatashell[:set_inputno](get_line_number())
                 expr = symataparseline()
                 mathics_to_symata(expr)
             catch e
                 isa(e, PyCall.PyError) && pystring(e.val) == "EOFError()" && break
                 warn("parse error ",e)
+            finally
+                symatashell[:reset_lineno]()
             end
         if ex == exitexpr
             break
