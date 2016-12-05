@@ -89,7 +89,7 @@ Symata. However, mathics is rather slow in many cases, and is very slow in many 
 Symata is faster than mathics in all examples I have tried, and in some cases is much faster (by factors of perhaps of 5 to 1000). In general, the larger
 the expression, the larger the difference in performance.
 
-Symata is fast enough for practical applications. I will release a notebook used for research once the related manuscript is submitted.
+Symata is fast enough for practical applications. I will release a notebook used for research once the corresponding manuscript is submitted.
 There are many optimizations that can be made to Symata with varying amounts of effort. However, pieces of Symata are regularly redesigned,
 so optimizing is not a good use of resources at this point.
 
