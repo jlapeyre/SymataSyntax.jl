@@ -21,6 +21,8 @@ from mathics.core.parser import LineFeeder, FileLineFeeder
 from mathics import version_string, license_string, __version__
 from mathics import settings
 
+from mathics.main import TerminalOutput
+
 import six
 from six.moves import input
 
@@ -30,7 +32,7 @@ class SymataTerminalShell(LineFeeder):
         super(SymataTerminalShell, self).__init__('<stdin>')
         self.input_encoding = locale.getpreferredencoding()
         self.lineno = 0
-        
+
         # Try importing readline to enable arrow keys support etc.
         self.using_readline = False
         try:
@@ -173,10 +175,10 @@ class SymataTerminalShell(LineFeeder):
 
     def get_symata_in_prompt(self):
         return '{1}In[{2}{0}{3}]:= {4}'.format(self.lineno, *self.incolors)
-        
+
     def feed(self):
         result = self.read_line(self.get_symata_in_prompt()) + '\n'
-#        result = self.read_line("") + '\n'        
+#        result = self.read_line("") + '\n'
         if result == '\n':
             return ''   # end of input
         self.lineno += 1
@@ -184,3 +186,21 @@ class SymataTerminalShell(LineFeeder):
 
     def empty(self):
         return False
+
+
+def mathics_shell(shell):
+    while True:
+        try:
+            evaluation = Evaluation(shell.definitions, output=TerminalOutput(shell))
+            query = evaluation.parse_feeder(shell)
+            if query is None:
+                continue
+            result = evaluation.evaluate(query, timeout=settings.TIMEOUT)
+            if result is not None:
+                shell.print_result(result)
+        except (KeyboardInterrupt):
+            print('\nKeyboardInterrupt')
+        except (SystemExit, EOFError):
+            break
+        finally:
+            shell.reset_lineno()

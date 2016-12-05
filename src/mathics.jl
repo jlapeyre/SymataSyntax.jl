@@ -3,11 +3,14 @@ using PyCall
 import Symata.SymataIO: symata_to_mma_fullform_string
 
 const mathics = PyCall.PyNULL()
+const symataTerminalShell = PyCall.PyNULL()
 const mathicsTerminalShell = PyCall.PyNULL()
+const symataevaluation = PyCall.PyNULL()
 const mathicsevaluation = PyCall.PyNULL()
+const symatashell = PyCall.PyNULL()
 const mathicsshell = PyCall.PyNULL()
+const symatadefinitions = PyCall.PyNULL()
 const mathicsdefinitions = PyCall.PyNULL()
-
 const symatapy = PyCall.PyNULL()
 
 function import_mathics()
@@ -23,16 +26,20 @@ function init_mathics()
     pyimport("mathics.core.definitions")
     pyimport("mathics.core.evaluation")
     pyimport("mathics.core.parser")
-    symatapy = pyimport("symatapy")
-    copy!(mathicsTerminalShell, symatapy[:SymataTerminalShell])
+    copy!(symatapy, pyimport("symatapy"))
+    copy!(symataTerminalShell, symatapy[:SymataTerminalShell])
+    copy!(mathicsTerminalShell, mathics[:main][:TerminalShell])
     make_mmasyntax_REPL()
     nothing
 end
 
 function make_mmasyntax_REPL()
+    copy!(symatadefinitions, mathics[:core][:definitions][:Definitions](add_builtin=true))
     copy!(mathicsdefinitions, mathics[:core][:definitions][:Definitions](add_builtin=true))
+    copy!(symatashell, symataTerminalShell(symatadefinitions, "Linux", true, true))
     copy!(mathicsshell, mathicsTerminalShell(mathicsdefinitions, "Linux", true, true))
     copy!(mathicsevaluation, mathics[:core][:evaluation][:Evaluation](mathicsdefinitions, output=mathics[:main][:TerminalOutput](mathicsshell)))
+    copy!(symataevaluation, mathics[:core][:evaluation][:Evaluation](symatadefinitions, output=mathics[:main][:TerminalOutput](symatashell)))
 end
 
 mathicstype(ex::PyObject) = pytypeof(ex)[:__name__]
@@ -65,8 +72,8 @@ end
 ## Null, or pass through, or ... ?
 mathics_to_symata(x) = Symata.Null
 
-function mathicsparseline()
-    mathicsevaluation[:parse_feeder](mathicsshell)
+function symataparseline()
+    symataevaluation[:parse_feeder](symatashell)
 end
 
 type EvaluateMmaSyntax <: AbstractEvaluateOptions
@@ -94,8 +101,8 @@ function mmasyntax_REPL()
         ex =
             try
                 #                print(input_prompt())  # we do this in python
-                mathicsshell[:set_lineno](get_line_number())
-                expr = mathicsparseline()
+                symatashell[:set_lineno](get_line_number())
+                expr = symataparseline()
                 mathics_to_symata(expr)
             catch e
                 isa(e, PyCall.PyError) && pystring(e.val) == "EOFError()" && break
@@ -109,9 +116,19 @@ function mmasyntax_REPL()
             println()
             continue
         end
-        resmathics = mathicsevaluation[:parse](Symata.SymataIO.symata_to_mma_fullform_string(res))
-        restring = mathicsevaluation[:format_output](resmathics)
+        resmathics = symataevaluation[:parse](Symata.SymataIO.symata_to_mma_fullform_string(res))
+        restring = symataevaluation[:format_output](resmathics)
         println(restring)
         println()
     end
+end
+
+"""
+    mathics_REPL()
+
+enter the mathics REPL. This is independent of Symata.
+Enter `ctrl-d` to exit this REPL.
+"""
+function mathics_REPL()
+    symatapy[:mathics_shell](mathicsshell)
 end
