@@ -152,3 +152,20 @@ Enter `ctrl-d` to exit this REPL.
 function mathics_REPL()
     symatapy[:mathics_shell](mathics_repl.shell)
 end
+
+"""
+    mathics_read_evaluate_single_line(s::String)
+
+parses the mathics expression `s`, evaluates it with the mathics evaluation sequence and
+returns the result as a string.
+"""
+function mathics_read_evaluate_single_line(instr)
+    symatapy[:read_and_evaluate](mathics_repl.evaluation,instr)
+end
+
+# For example:
+# julia> mathics_read_evaluate_single_line("MathMLForm[Table[i, {i,3}]]")
+# "<math><mrow><mo>{</mo> <mrow><mn>1</mn> <mo>,</mo> <mn>2</mn> <mo>,</mo> <mn>3</mn></mrow> <mo>}</mo></mrow></math>"
+
+# This formats the expressionw without evaluating it.
+# mathics_read_evaluate_single_line("MathMLForm[HoldForm[{1, 2, 3} ]]")

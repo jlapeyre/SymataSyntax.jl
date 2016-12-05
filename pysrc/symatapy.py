@@ -26,6 +26,7 @@ from mathics.main import TerminalOutput
 import six
 from six.moves import input
 
+### Shell for running wrapping mathics REPL around Symata evaluation
 
 class SymataTerminalShell(LineFeeder):
     def __init__(self, definitions, colors, want_readline, want_completion):
@@ -191,6 +192,8 @@ class SymataTerminalShell(LineFeeder):
         return False
 
 
+### A shell for running an independent mathics process    
+
 def mathics_shell(shell):
     while True:
         try:
@@ -207,3 +210,24 @@ def mathics_shell(shell):
             break
         finally:
             shell.reset_lineno()
+
+
+def evaluate_query(evaluation,query):
+    result = evaluation.evaluate(query, timeout=settings.TIMEOUT)
+    return result
+
+## hmmm, this returns the result as a string
+def read_and_evaluate(evaluation,input):
+    query = evaluation.parse(input)
+    result = evaluation.evaluate(query, timeout=settings.TIMEOUT)
+    return result.result
+
+
+
+
+
+
+
+
+
+
