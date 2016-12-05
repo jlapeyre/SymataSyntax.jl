@@ -2,45 +2,74 @@ using PyCall
 
 import Symata.SymataIO: symata_to_mma_fullform_string
 
-const mathics = PyCall.PyNULL()
-const symataTerminalShell = PyCall.PyNULL()
-const mathicsTerminalShell = PyCall.PyNULL()
-const symataevaluation = PyCall.PyNULL()
-const mathicsevaluation = PyCall.PyNULL()
-const symatashell = PyCall.PyNULL()
-const mathicsshell = PyCall.PyNULL()
-const symatadefinitions = PyCall.PyNULL()
-const mathicsdefinitions = PyCall.PyNULL()
-const symatapy = PyCall.PyNULL()
+pynull() = PyCall.PyNULL()
 
-function import_mathics()
-    copy!(mathics, PyCall.pyimport_conda("mathics", "mathics"))
+#### Setup REPLs
+
+const mathics = pynull()
+const symatapy = pynull()
+
+type MathicsREPL
+    TerminalShell
+    shell
+    evaluation
+    definitions
+end
+
+MathicsREPL() = MathicsREPL(pynull(),pynull(),pynull(),pynull())
+
+const symata_mma_repl = MathicsREPL()
+const mathics_repl = MathicsREPL()
+
+function set_TerminalShell(toplevel, shell, repl::MathicsREPL)
+    copy!(repl.TerminalShell, toplevel[shell])
+    nothing
+end
+
+set_symataTerminalShell() = set_TerminalShell(symatapy, :SymataTerminalShell, symata_mma_repl)
+set_mathicsTerminalShell() = set_TerminalShell(mathics[:main], :TerminalShell, mathics_repl)
+
+function populateMathicsREPL(repl::MathicsREPL)
+    copy!(repl.definitions,  mathics[:core][:definitions][:Definitions](add_builtin=true))
+    copy!(repl.shell,  repl.TerminalShell(repl.definitions, "Linux", true, true))
+    copy!(repl.evaluation,  mathics[:core][:evaluation][:Evaluation](repl.definitions, output=mathics[:main][:TerminalOutput](repl.shell)))
+    nothing
+end
+
+function make_mmasyntax_repl()
+    set_symataTerminalShell()
+    populateMathicsREPL(symata_mma_repl)
+end
+
+function make_mathics_repl()
+    set_mathicsTerminalShell()
+    populateMathicsREPL(mathics_repl)
+end
+
+import_mathics() = copy!(mathics, PyCall.pyimport_conda("mathics", "mathics"))
+
+const symatapydir = joinpath(dirname(@__FILE__), "..", "pysrc")
+function import_symatapy()
+    push!(pyimport("sys")["path"], symatapydir)
+    copy!(symatapy, pyimport("symatapy"))
 end
 
 function init_mathics()
-    symatapydir = joinpath(dirname(@__FILE__), "..", "pysrc")
-    push!(pyimport("sys")["path"], symatapydir)
-    import_mathics()
     pyimport("mathics.main")
     pyimport("mathics.core")
     pyimport("mathics.core.definitions")
     pyimport("mathics.core.evaluation")
     pyimport("mathics.core.parser")
-    copy!(symatapy, pyimport("symatapy"))
-    copy!(symataTerminalShell, symatapy[:SymataTerminalShell])
-    copy!(mathicsTerminalShell, mathics[:main][:TerminalShell])
-    make_mmasyntax_REPL()
+    import_mathics()
+    import_symatapy()
+    make_mmasyntax_repl()
+    make_mathics_repl()
     nothing
 end
 
-function make_mmasyntax_REPL()
-    copy!(symatadefinitions, mathics[:core][:definitions][:Definitions](add_builtin=true))
-    copy!(mathicsdefinitions, mathics[:core][:definitions][:Definitions](add_builtin=true))
-    copy!(symatashell, symataTerminalShell(symatadefinitions, "Linux", true, true))
-    copy!(mathicsshell, mathicsTerminalShell(mathicsdefinitions, "Linux", true, true))
-    copy!(mathicsevaluation, mathics[:core][:evaluation][:Evaluation](mathicsdefinitions, output=mathics[:main][:TerminalOutput](mathicsshell)))
-    copy!(symataevaluation, mathics[:core][:evaluation][:Evaluation](symatadefinitions, output=mathics[:main][:TerminalOutput](symatashell)))
-end
+
+#### Running REPLs and translating
+
 
 mathicstype(ex::PyObject) = pytypeof(ex)[:__name__]
 
@@ -48,11 +77,7 @@ mathicstype(ex::PyObject) = pytypeof(ex)[:__name__]
 function mathics_to_symata_symbol(s::String)
     rg = r"\`([^\`]+)$"
     ma = match(rg, s)
-    if ma !== nothing
-        return Symbol(ma.captures[1])
-    else
-        return Symbol(s)
-    end
+    return ma !== nothing ? Symbol(ma.captures[1]) : Symbol(s)
 end
 
 function mathics_to_symata(ex::PyObject)
@@ -61,21 +86,17 @@ function mathics_to_symata(ex::PyObject)
         s = ex[:head][:name]
         return mxpr(mathics_to_symata_symbol(s), map(mathics_to_symata, ex[:leaves]))
     end
-    if h == "Symbol"
-        return mathics_to_symata_symbol(ex[:name])
-    end
-    if haskey(ex, :value)
-        return ex[:value]
-    end
+    h == "Symbol" && return mathics_to_symata_symbol(ex[:name])
+    haskey(ex, :value) && return ex[:value]
     warn("Unable to translate $ex")
 end
 
 ## Null, or pass through, or ... ?
 mathics_to_symata(x) = Symata.Null
 
-function symataparseline()
-    symataevaluation[:parse_feeder](symatashell)
-end
+parseline(repl) = repl.evaluation[:parse_feeder](repl.shell)
+
+## This type is used in Symata to control evaluation
 
 type EvaluateMmaSyntax <: AbstractEvaluateOptions
 end
@@ -98,29 +119,26 @@ Enter `ctrl-d` to exit this mode.
 function mmasyntax_REPL()
     exitexpr = mxpr(:ExitMathics)
     evalopts = EvaluateMmaSyntax()
+    repl = symata_mma_repl
     while true
         ex =
             try
-                symatashell[:set_inputno](get_line_number())
-                expr = symataparseline()
+                repl.shell[:set_inputno](get_line_number())
+                expr = parseline(repl)
                 mathics_to_symata(expr)
             catch e
                 isa(e, PyCall.PyError) && pystring(e.val) == "EOFError()" && break
                 warn("parse error ",e)
             finally
-                symatashell[:reset_lineno]()
+                repl.shell[:reset_lineno]()
             end
-        if ex == exitexpr
-            break
+        ex == exitexpr && break
+        res = Symata.symataevaluate(ex, evalopts)  ## use the Symata evaluation sequence
+        if (res !== nothing) && (res != Null)
+            resmathics = repl.evaluation[:parse](Symata.SymataIO.symata_to_mma_fullform_string(res))
+            restring = repl.evaluation[:format_output](resmathics)
+            println(restring)
         end
-        res = Symata.symataevaluate(ex, evalopts)
-        if (res === nothing) || (res == Null)
-            println()
-            continue
-        end
-        resmathics = symataevaluation[:parse](Symata.SymataIO.symata_to_mma_fullform_string(res))
-        restring = symataevaluation[:format_output](resmathics)
-        println(restring)
         println()
     end
 end
@@ -132,5 +150,5 @@ enter the mathics REPL. This is independent of Symata.
 Enter `ctrl-d` to exit this REPL.
 """
 function mathics_REPL()
-    symatapy[:mathics_shell](mathicsshell)
+    symatapy[:mathics_shell](mathics_repl.shell)
 end
