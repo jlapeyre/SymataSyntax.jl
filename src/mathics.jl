@@ -35,7 +35,7 @@ set_mathicsTerminalShell() = set_TerminalShell(mathics[:main], :TerminalShell, m
 function populateMathicsREPL(repl::MathicsREPL)
     copy!(repl.definitions,  mathics[:core][:definitions][:Definitions](add_builtin=true))
     copy!(repl.shell,  repl.TerminalShell(repl.definitions, "Linux", true, true))
-    copy!(repl.evaluation,  mathics[:core][:evaluation][:Evaluation](repl.definitions, output=mathics[:main][:TerminalOutput](repl.shell)))
+    copy!(repl.evaluation,  Evaluation(repl.definitions, output=TerminalOutput(repl.shell)))
     nothing
 end
 
@@ -199,7 +199,7 @@ function read_file(fname)
     local lastres = nothing
     local res = nothing
     while ! feeder[:empty]()
-        evaluation = mathics[:core][:evaluation][:Evaluation](repl.definitions, output=mathics[:main][:TerminalOutput](repl.shell),
+        evaluation = Evaluation(repl.definitions, output=TerminalOutput(repl.shell),
                                                               catch_interrupt=false)
         query = evaluation[:parse_feeder](feeder)
         ex = mathics_to_symata(query)
