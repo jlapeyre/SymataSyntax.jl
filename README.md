@@ -66,6 +66,8 @@ symata 3> ex
 Out(3) = [x,x^2,x^3,x^4,x^5]
 ```
 
+In Jupyter, use `MmaSyntax(True)` and `MmaSyntax[False]` to enter and exit the mode.
+
 ### Reading from a file
 
 Read and evaluate Mathematica syntax expressions from a file with `GetMma`.
