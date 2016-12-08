@@ -58,12 +58,23 @@ function import_symatapy()
 end
 
 function init_mathics()
+    try
+        import_mathics()
+    catch er
+        bd = Conda.bin_dir(Conda.ROOTENV)
+        pippath = joinpath(bd,"pip")
+        if isfile(pippath)
+            println("\n\nUnable to import mathics: You may be able to install with '$pippath install mathics'\n\n\n")
+        else
+            error("\n\nUnable to import mathics: You may be able to install like this: '$pippath install mathics'\n But pip is not installed in this location.\n\n\n")
+        end
+        rethrow(er)
+    end
     pyimport("mathics.main")
     pyimport("mathics.core")
     pyimport("mathics.core.definitions")
     pyimport("mathics.core.evaluation")
     pyimport("mathics.core.parser")
-    import_mathics()
     import_symatapy()
 
     copy!(TerminalOutput, mathics[:main][:TerminalOutput])
