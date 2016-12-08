@@ -111,6 +111,31 @@ mathics_to_symata(x) = x
 
 parseline(repl) = repl.evaluation[:parse_feeder](repl.shell)
 
+parsestring(repl,str) = repl.evaluation[:parse](str)
+
+parsestring(str) = symata_mma_repl.evaluation[:parse](str)
+
+mmatosymata(str) = parsestring(str) |> mathics_to_symata
+
+function symata_expr_to_mma_string(mx)
+    repl = symata_mma_repl
+    resmathics = repl.evaluation[:parse](Symata.SymataIO.symata_to_mma_fullform_string(mx))
+    restring = repl.evaluation[:format_output](resmathics)  ## TODO: wrap this string or something so the quotes are not printed.
+#    println(restring)
+end
+
+## This wrapper allows printing in Jupyter without quotes.
+immutable MmaOutString
+    s::String
+end
+Base.show(io::IO,s::MmaOutString) = println(io, s.s)
+
+
+# macro mmaex(ex)   # use this macro from the julia prompt
+#     mx = symataevaluate(ex)
+#     :(($(esc(mx))))
+# end
+
 ## This type is used in Symata to control evaluation
 
 type EvaluateMmaSyntax <: AbstractEvaluateOptions
