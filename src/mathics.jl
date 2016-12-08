@@ -90,8 +90,16 @@ end
 function mathics_to_symata(ex::PyObject)
     h = mathicstype(ex)
     if h == "Expression"
-        s = ex[:head][:name]
-        return mxpr(mathics_to_symata_symbol(s), map(mathics_to_symata, ex[:leaves]))
+        h1 = ex[:head]
+        t = mathicstype(h1)
+        local shead
+        if t == "Symbol"
+            shead = mathics_to_symata_symbol(h1[:name])
+        else
+            shead = mathics_to_symata(h1)
+        end
+        res = mxpr(shead, map(mathics_to_symata, ex[:leaves]))
+        return res
     end
     h == "Symbol" && return mathics_to_symata_symbol(ex[:name])
     haskey(ex, :value) && return ex[:value]
@@ -99,7 +107,7 @@ function mathics_to_symata(ex::PyObject)
 end
 
 ## Null, or pass through, or ... ?
-mathics_to_symata(x) = Symata.Null
+mathics_to_symata(x) = x
 
 parseline(repl) = repl.evaluation[:parse_feeder](repl.shell)
 
