@@ -186,9 +186,14 @@ function mmasyntax_REPL()
         ex == exitexpr && break
         res = Symata.symataevaluate(ex, evalopts)  ## use the Symata evaluation sequence
         if (res !== nothing) && (res != Null)
-            resmathics = repl.evaluation[:parse](Symata.SymataIO.symata_to_mma_fullform_string(res))
-            restring = repl.evaluation[:format_output](resmathics)
-            println(restring)
+            try
+                resmathics = repl.evaluation[:parse](Symata.SymataIO.symata_to_mma_fullform_string(res))
+                restring = repl.evaluation[:format_output](resmathics)
+                println(restring)
+            catch
+                warn("Unable to print result in Mathematica Syntax")
+                Symata.symprintln(res)
+            end
         end
         println()
     end

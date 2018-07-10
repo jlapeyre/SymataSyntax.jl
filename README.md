@@ -12,6 +12,10 @@ This package provides Mathematica syntax for [`Symata`](https://github.com/jlape
 Mathematica and Wolfram language software from WRI. `SymataSyntax` uses the python package [mathics](http://www.mathics.org) for parsing and
 formatting.
 
+This module provides a shell within the symata shell that reads and prints in Mathematica syntax. It also supports Jupyter. It also supports
+reading from a file. It also provides a shell to interact directly with the runnin `mathics` process. You can enter and leave the alternative
+syntax and mathics shells repeatedly during a symata session.
+
 ## Requirements
 
 `SymataSyntax` can be installed like this
