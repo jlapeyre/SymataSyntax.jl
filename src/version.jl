@@ -1,1 +1,1 @@
-const SYMATASYNTAX_VERSION = v"0.3.0-dev.018"
+const SYMATASYNTAX_VERSION = v"0.4.0"

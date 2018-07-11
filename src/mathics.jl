@@ -1,5 +1,3 @@
-using PyCall
-
 import Symata.SymataIO: symata_to_mma_fullform_string
 
 pynull() = PyCall.PyNULL()
@@ -12,7 +10,7 @@ const TerminalOutput = pynull()
 const mathics = pynull()
 const symatapy = pynull()
 
-type MathicsREPL
+mutable struct MathicsREPL
     TerminalShell
     shell
     evaluation
@@ -88,7 +86,6 @@ end
 
 #### Running REPLs and translating
 
-
 mathicstype(ex::PyObject) = pytypeof(ex)[:__name__]
 
 ## For the moment we strip all context information from symbols.
@@ -136,7 +133,7 @@ function symata_expr_to_mma_string(mx)
 end
 
 ## This wrapper allows printing in Jupyter without quotes.
-immutable MmaOutString
+struct MmaOutString
     s::String
 end
 Base.show(io::IO,s::MmaOutString) = println(io, s.s)
@@ -149,10 +146,10 @@ Base.show(io::IO,s::MmaOutString) = println(io, s.s)
 
 ## This type is used in Symata to control evaluation
 
-type EvaluateMmaSyntax <: AbstractEvaluateOptions
+struct EvaluateMmaSyntax <: AbstractEvaluateOptions
 end
 
-function prompt(opt::EvaluateMmaSyntax)
+function Symata.prompt(opt::EvaluateMmaSyntax)
     if (! simple(opt) ) && isinteractive() && do_we_print_outstring
         print("Out[" * string(get_line_number()) * "]= ")
     end
@@ -216,7 +213,7 @@ parses the mathics expression `s`, evaluates it with the mathics evaluation sequ
 returns the result as a string.
 """
 function mathics_read_evaluate_single_line(instr)
-    symatapy[:read_and_evaluate](mathics_repl.evaluation,instr)
+    symatapy[:read_and_evaluate](mathics_repl.evaluation, instr)
 end
 
 # For example:
@@ -228,10 +225,10 @@ end
 
 #### Reading from a file
 
-type EvaluateMmaSyntaxFile <: AbstractEvaluateOptions
+struct EvaluateMmaSyntaxFile <: AbstractEvaluateOptions
 end
 
-prompt(opt::EvaluateMmaSyntaxFile) = nothing
+Symata.prompt(opt::EvaluateMmaSyntaxFile) = nothing
 simple(opt::EvaluateMmaSyntaxFile) = true
 
 """

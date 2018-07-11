@@ -1,2 +1,4 @@
-julia 0.5
+julia 0.7-beta
 PyCall 1.7.0
+Symata
+Conda

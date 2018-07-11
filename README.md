@@ -8,12 +8,19 @@ Mathematica syntax for Symata
 
 <!-- [![codecov.io](http://codecov.io/github/jlapeyre/SymataSyntax.jl/coverage.svg?branch=master)](http://codecov.io/github/jlapeyre/SymataSyntax.jl?branch=master) -->
 
+This version of `SymataSyntax` is for Juilia `v.0.7`. In order to use `SymataSyntax` you must add
+a dependency on `SymataSyntax` to the `REQUIRE` file of `Symata`. This is not done by default to
+avoid adding burdensome dependencies to `Symata`. This should not be necessary by Julia v1.0,
+and hopefully sooner.
+
+`SymataSyntax` tagged with v0.4.0  is the last version that supports Julia v0.6.
+
 This package provides Mathematica syntax for [`Symata`](https://github.com/jlapeyre/Symata.jl). This package is unrelated to and independent of
 Mathematica and Wolfram language software from WRI. `SymataSyntax` uses the python package [mathics](http://www.mathics.org) for parsing and
 formatting.
 
 This module provides a shell within the symata shell that reads and prints in Mathematica syntax. It also supports Jupyter. It also supports
-reading from a file. It also provides a shell to interact directly with the runnin `mathics` process. You can enter and leave the alternative
+reading from a file. It also provides a shell to interact directly with the running `mathics` process. You can enter and leave the alternative
 syntax and mathics shells repeatedly during a symata session.
 
 ## Requirements
@@ -33,11 +40,10 @@ julia> Pkg.checkout("Symata")
 
 See the [`Symata` page](https://github.com/jlapeyre/Symata.jl) for more details.
 
-`SymataSyntax`  requires the python package `mathics`. 
+`SymataSyntax`  requires the python package `mathics`.
 At the moment, mathics cannot be installed automatically via `Conda.jl`. mathics can be installed using `pip`.
 The recommended way to install `Symata` is using `Conda.jl`, which installs `python` and `sympy` in your collection of Julia packages in the `Conda` directory.
 The program `pip` will also be installed (at least on Linux). The location of the python binaries, `python`, `conda`, `pip`, etc can be found as follows
-
 ```julia
 julia> Using Conda
 julia> Conda.bin_dir(Conda.ROOTENV)
@@ -50,11 +56,15 @@ In this case, `mathics` can by installed from a shell like this
 /home/someuser/.julia/v0.6/Conda/deps/usr/bin/pip install mathics
 ```
 
+Alternatively, you can use a system- or user installation of `mathics`.
+
 ## Using SymataSyntax
 
 ### Mathematica-syntax mode
 
-Enter Mathematica-syntax mode with the Symata command `MmaSyntax()`. Return to the standard Symata-syntax mode by typing `ctrl-d`.
+Use `SymataSyntax` from within `Symata`. The command 
+The command `MmaSyntax()` loads `SymataSyntax` and enters Mathematica-syntax mode.
+Return to the standard Symata-syntax mode by typing `ctrl-d`.
 The Symata command `MmaSyntax()` will try to load `SymataSyntax.jl`.
 
 ```
@@ -111,5 +121,7 @@ so optimizing is not a good use of resources at this point.
  -->
 <!--  LocalWords:  mathics julia Conda sympy conda dir ROOTENV ctrl
  -->
-<!--  LocalWords:  symata mpmath reimplementation
+<!--  LocalWords:  symata mpmath reimplementation Jupyter MmaSyntax
+ -->
+<!--  LocalWords:  GetMma fname REPL
  -->

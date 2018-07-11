@@ -1,9 +1,12 @@
 module SymataSyntax
 
 using Symata
+using PyCall
 using Conda
 
-import Symata: AbstractEvaluateOptions, prompt, simple, isinteractive, do_we_print_outstring, get_line_number, Null, isymata_mode, isymata_mma_mode
+import Symata: AbstractEvaluateOptions,
+    simple, isinteractive, do_we_print_outstring, get_line_number, Null, isymata_mode, isymata_mma_mode
+
 export mathics_REPL, mmasyntax_REPL, mathics_read_evaluate_single_line, symata_expr_to_mma_string
 
 include("version.jl")

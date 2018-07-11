@@ -1,6 +1,6 @@
 The SymataSyntax.jl package is licensed under the GNU Public License, Version 3.0+:
 
-> Copyright (c) 2016: John Lapeyre.
+> Copyright (c) 2016-2018: John Lapeyre.
 > This program is free software: you can redistribute it and/or modify
 > it under the terms of the GNU General Public License as published by
 > the Free Software Foundation, either version 3 of the License, or
