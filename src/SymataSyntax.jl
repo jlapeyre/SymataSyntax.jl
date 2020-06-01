@@ -1,11 +1,14 @@
+__precompile__(false)
+
 module SymataSyntax
 
 using Symata
 using PyCall
-using Conda
+#using Conda
 
 import Symata: AbstractEvaluateOptions,
-    simple, isinteractive, do_we_print_outstring, get_line_number, Null, isymata_mode, isymata_mma_mode
+    simple, isinteractive, do_we_print_Out_label, get_line_number, Null, isymata_mma_mode
+# isymata_mode
 
 export mathics_REPL, mmasyntax_REPL, mathics_read_evaluate_single_line, symata_expr_to_mma_string
 
@@ -14,9 +17,10 @@ include("mathics.jl")
 
 function __init__()
     init_mathics()
-    if isymata_mode()  ## Enter Mma syntax mode by default if we are in Jupyter
-        isymata_mma_mode(true)
-    end
+    # FIXME: See note in Symata/src/kernelstate.jl
+#    if isymata_mode()  ## Enter Mma syntax mode by default if we are in Jupyter
+#        isymata_mma_mode(true)
+#    end
 end
-        
+
 end # module SymataSyntax

@@ -31,10 +31,12 @@ set_symataTerminalShell() = set_TerminalShell(symatapy, :SymataTerminalShell, sy
 set_mathicsTerminalShell() = set_TerminalShell(mathics[:main], :TerminalShell, mathics_repl)
 
 function populateMathicsREPL(repl::MathicsREPL)
-    copy!(repl.definitions,  mathics[:core][:definitions][:Definitions](add_builtin=true))
+    # FIXME. Need to use add_builtin, but API has changed
+#    copy!(repl.definitions,  mathics.core.definitions.Definitions(add_builtin=true))
+    copy!(repl.definitions,  mathics.core.definitions.Definitions())
     copy!(repl.shell,  repl.TerminalShell(repl.definitions, "Linux", true, true))
     copy!(repl.evaluation,  Evaluation(repl.definitions, output=TerminalOutput(repl.shell)))
-    nothing
+    return nothing
 end
 
 function make_mmasyntax_repl()
@@ -111,7 +113,7 @@ function mathics_to_symata(ex::PyObject)
     end
     h == "Symbol" && return mathics_to_symata_symbol(ex[:name])
     haskey(ex, :value) && return ex[:value]
-    warn("Unable to translate $ex")
+    @warn "Unable to translate $ex"
 end
 
 ## Null, or pass through, or ... ?
@@ -149,12 +151,21 @@ Base.show(io::IO,s::MmaOutString) = println(io, s.s)
 struct EvaluateMmaSyntax <: AbstractEvaluateOptions
 end
 
-function Symata.prompt(opt::EvaluateMmaSyntax)
-    if (! simple(opt) ) && isinteractive() && do_we_print_outstring
-        print("Out[" * string(get_line_number()) * "]= ")
+function Symata.maybe_print_Out_label(opt::EvaluateMmaSyntax)
+    # do_we_print_Out_label is for IJulia
+    if (! simple(opt)) && isinteractive() && do_we_print_Out_label
+        print("Out[" * string(get_line_number()) * "] = ")
     end
     nothing
 end
+
+# function Symata.prompt(opt::EvaluateMmaSyntax)
+#     if (! simple(opt) ) && isinteractive() && do_we_print_outstring
+#         print("Out[" * string(get_line_number()) * "]= ")
+#     end
+#     nothing
+# end
+
 
 simple(opt::EvaluateMmaSyntax) = false
 
@@ -171,24 +182,25 @@ function mmasyntax_REPL()
     while true
         ex =
             try
-                repl.shell[:set_inputno](get_line_number())
+                repl.shell.set_inputno(get_line_number())
                 expr = parseline(repl)
+                @show expr  # debug
                 mathics_to_symata(expr)
             catch e
                 isa(e, PyCall.PyError) && pystring(e.val) == "EOFError()" && break
-                warn("parse error ",e)
+                @warn("parse error ",e)
             finally
-                repl.shell[:reset_lineno]()
+                repl.shell.reset_lineno()
             end
         ex == exitexpr && break
         res = Symata.symataevaluate(ex, evalopts)  ## use the Symata evaluation sequence
         if (res !== nothing) && (res != Null)
             try
-                resmathics = repl.evaluation[:parse](Symata.SymataIO.symata_to_mma_fullform_string(res))
-                restring = repl.evaluation[:format_output](resmathics)
+                resmathics = repl.evaluation.parse(Symata.SymataIO.symata_to_mma_fullform_string(res))
+                restring = repl.evaluation.format_output(resmathics)
                 println(restring)
             catch
-                warn("Unable to print result in Mathematica Syntax")
+                @warn("Unable to print result in Mathematica Syntax")
                 Symata.symprintln(res)
             end
         end
@@ -203,7 +215,7 @@ enter the mathics REPL. This is independent of Symata.
 Enter `ctrl-d` to exit this REPL.
 """
 function mathics_REPL()
-    symatapy[:mathics_shell](mathics_repl.shell)
+    symatapy.mathics_shell(mathics_repl.shell)
 end
 
 """
@@ -213,7 +225,7 @@ parses the mathics expression `s`, evaluates it with the mathics evaluation sequ
 returns the result as a string.
 """
 function mathics_read_evaluate_single_line(instr)
-    symatapy[:read_and_evaluate](mathics_repl.evaluation, instr)
+    symatapy.read_and_evaluate(mathics_repl.evaluation, instr)
 end
 
 # For example:
@@ -228,7 +240,8 @@ end
 struct EvaluateMmaSyntaxFile <: AbstractEvaluateOptions
 end
 
-Symata.prompt(opt::EvaluateMmaSyntaxFile) = nothing
+# FIXME: Find the correct Symata method. Following is obsolete
+#Symata.prompt(opt::EvaluateMmaSyntaxFile) = nothing
 simple(opt::EvaluateMmaSyntaxFile) = true
 
 """
@@ -241,13 +254,13 @@ function read_file(fname)
     repl = symata_mma_repl
     evalopts = EvaluateMmaSyntaxFile()
     fd = pybuiltin("file")(fname)
-    feeder = mathics[:core][:parser][:FileLineFeeder](fd)
+    feeder = mathics.core.parser.FileLineFeeder(fd)
     local lastres = nothing
     local res = nothing
-    while ! feeder[:empty]()
+    while ! feeder.empty()
         evaluation = Evaluation(repl.definitions, output=TerminalOutput(repl.shell),
                                                               catch_interrupt=false)
-        query = evaluation[:parse_feeder](feeder)
+        query = evaluation.parse_feeder(feeder)
         ex = mathics_to_symata(query)
         lastres = res
         res = Symata.symataevaluate(ex, evalopts)
