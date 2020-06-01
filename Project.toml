@@ -1,0 +1,19 @@
+name = "SymataSyntax"
+desc = "Mathematica syntax for Symata"
+authors = ["John Lapeyre"]
+license = "MIT"
+version = "0.0.1"
+uuid = "ab9337c0-a3bb-11ea-0074-71f06c4b6191"
+
+[deps]
+Symata = "a906b1d5-d016-55c4-aab3-8a20cba0db2a"
+PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
