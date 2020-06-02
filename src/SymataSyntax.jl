@@ -20,7 +20,16 @@ function __init__()
     # FIXME: See note in Symata/src/kernelstate.jl
 #    if isymata_mode()  ## Enter Mma syntax mode by default if we are in Jupyter
 #        isymata_mma_mode(true)
-#    end
+    #    end
+    # Following is a test to see if I can find a way around a segfault.
+    # It does not solve the problem
+    # Calling the following causes a segfault
+    py"""
+    import mathics
+    def get_definitions():
+        return mathics.core.definitions.Definitions(add_builtin=True)
+
+    """
 end
 
 end # module SymataSyntax

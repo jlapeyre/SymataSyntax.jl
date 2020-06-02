@@ -28,15 +28,19 @@ function set_TerminalShell(toplevel, shell, repl::MathicsREPL)
 end
 
 set_symataTerminalShell() = set_TerminalShell(symatapy, :SymataTerminalShell, symata_mma_repl)
-set_mathicsTerminalShell() = set_TerminalShell(mathics[:main], :TerminalShell, mathics_repl)
+set_mathicsTerminalShell() = set_TerminalShell(mathics.main, :TerminalShell, mathics_repl)
 
 function populateMathicsREPL(repl::MathicsREPL)
-    # FIXME. Need to use add_builtin, but API has changed
-#    copy!(repl.definitions,  mathics.core.definitions.Definitions(add_builtin=true))
-    copy!(repl.definitions,  mathics.core.definitions.Definitions())
-    copy!(repl.shell,  repl.TerminalShell(repl.definitions, "Linux", true, true))
+    # FIXME. Need to use add_builtin ? API has changed
+    copy!(repl.definitions, mathics.core.definitions.Definitions(add_builtin=false))
+#    copy!(repl.definitions,  mathics.core.definitions.Definitions())
+    copy!(repl.shell, repl.TerminalShell(repl.definitions, "Linux", true, true))
     copy!(repl.evaluation,  Evaluation(repl.definitions, output=TerminalOutput(repl.shell)))
     return nothing
+end
+
+function myget_defs()
+    return py"get_definitions()"
 end
 
 function make_mmasyntax_repl()
@@ -53,7 +57,7 @@ import_mathics() = copy!(mathics, PyCall.pyimport_conda("mathics", "mathics"))
 
 const symatapydir = joinpath(dirname(@__FILE__), "..", "pysrc")
 function import_symatapy()
-    push!(pyimport("sys")["path"], symatapydir)
+    push!(pyimport("sys")."path", symatapydir)
     copy!(symatapy, pyimport("symatapy"))
 end
 
@@ -77,8 +81,8 @@ function init_mathics()
     pyimport("mathics.core.parser")
     import_symatapy()
 
-    copy!(TerminalOutput, mathics[:main][:TerminalOutput])
-    copy!(Evaluation, mathics[:core][:evaluation][:Evaluation])
+    copy!(TerminalOutput, mathics.main.TerminalOutput)
+    copy!(Evaluation, mathics.core.evaluation.Evaluation)
 
     make_mmasyntax_repl()
     make_mathics_repl()
@@ -88,7 +92,7 @@ end
 
 #### Running REPLs and translating
 
-mathicstype(ex::PyObject) = pytypeof(ex)[:__name__]
+mathicstype(ex::PyObject) = pytypeof(ex).__name__
 
 ## For the moment we strip all context information from symbols.
 function mathics_to_symata_symbol(s::String)
@@ -100,37 +104,38 @@ end
 function mathics_to_symata(ex::PyObject)
     h = mathicstype(ex)
     if h == "Expression"
-        h1 = ex[:head]
+        h1 = ex.head
         t = mathicstype(h1)
         local shead
         if t == "Symbol"
-            shead = mathics_to_symata_symbol(h1[:name])
+            shead = mathics_to_symata_symbol(h1.name)
         else
             shead = mathics_to_symata(h1)
         end
-        res = mxpr(shead, map(mathics_to_symata, ex[:leaves]))
+        res = mxpr(shead, map(mathics_to_symata, ex.leaves)...)
         return res
     end
-    h == "Symbol" && return mathics_to_symata_symbol(ex[:name])
-    haskey(ex, :value) && return ex[:value]
+    h == "Symbol" && return mathics_to_symata_symbol(ex.name)
+    #    haskey(ex, :value) && return ex.value
+    hasproperty(ex, :value) && return ex.value
     @warn "Unable to translate $ex"
 end
 
 ## Null, or pass through, or ... ?
 mathics_to_symata(x) = x
 
-parseline(repl) = repl.evaluation[:parse_feeder](repl.shell)
+parseline(repl) = repl.evaluation.parse_feeder(repl.shell)
 
-parsestring(repl,str) = repl.evaluation[:parse](str)
+parsestring(repl,str) = repl.evaluation.parse(str)
 
-parsestring(str) = symata_mma_repl.evaluation[:parse](str)
+parsestring(str) = symata_mma_repl.evaluation.parse(str)
 
 mmatosymata(str) = parsestring(str) |> mathics_to_symata
 
 function symata_expr_to_mma_string(mx)
     repl = symata_mma_repl
-    resmathics = repl.evaluation[:parse](Symata.SymataIO.symata_to_mma_fullform_string(mx))
-    restring = repl.evaluation[:format_output](resmathics)  ## TODO: wrap this string or something so the quotes are not printed.
+    resmathics = repl.evaluation.parse(Symata.SymataIO.symata_to_mma_fullform_string(mx))
+    restring = repl.evaluation.format_output(resmathics)  ## TODO: wrap this string or something so the quotes are not printed.
 #    println(restring)
 end
 
@@ -182,8 +187,11 @@ function mmasyntax_REPL()
     while true
         ex =
             try
+                @info "getting line"
                 repl.shell.set_inputno(get_line_number())
+                @info "parsing line"
                 expr = parseline(repl)
+                @info "done parsing"
                 @show expr  # debug
                 mathics_to_symata(expr)
             catch e
@@ -192,12 +200,21 @@ function mmasyntax_REPL()
             finally
                 repl.shell.reset_lineno()
             end
+        @show ex
         ex == exitexpr && break
         res = Symata.symataevaluate(ex, evalopts)  ## use the Symata evaluation sequence
+        @show res
+        # @show margs(res)
+        # @show typeof(margs(res)[1])
         if (res !== nothing) && (res != Null)
             try
-                resmathics = repl.evaluation.parse(Symata.SymataIO.symata_to_mma_fullform_string(res))
+                @show typeof(res)
+                mma_string = Symata.SymataIO.symata_to_mma_fullform_string(res)
+                @show mma_string
+                resmathics = repl.evaluation.parse(mma_string)
+                @show resmathics
                 restring = repl.evaluation.format_output(resmathics)
+                @show restring
                 println(restring)
             catch
                 @warn("Unable to print result in Mathematica Syntax")
